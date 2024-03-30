@@ -27,7 +27,7 @@ class ThreadPool {
         queues_(std::max(1UL, num_threads)),
         task_id_(0) {
     for (std::size_t i = 0; i != queues_.size(); ++i) {
-      threads_.emplace_back([this, i] () -> void { Task(i); });
+      threads_.emplace_back([this, i]() -> void { Task(i); });
       thread_map_.emplace(threads_.back().get_id(), i);
     }
   }
@@ -47,23 +47,19 @@ class ThreadPool {
     }
   }
 
-  std::size_t num_threads() const {
-    return threads_.size();
-  }
+  std::size_t num_threads() const { return threads_.size(); }
 
   const std::unordered_map<std::thread::id, std::size_t>& thread_map() const {
     return thread_map_;
   }
 
-  template<typename T, typename... Ts>
-  auto Submit(T&& routine, Ts&&... params)
-      -> std::future<typename std::result_of<T(Ts...)>::type> {
-    auto task = std::make_shared<std::packaged_task<typename std::result_of<T(Ts...)>::type()>>(  // NOLINT
+  template <typename T, typename... Ts>
+  auto Submit(T&& routine, Ts&&... params) {
+    auto task = std::make_shared<
+        std::packaged_task<typename std::invoke_result_t<T, Ts...>()>>(
         std::bind(std::forward<T>(routine), std::forward<Ts>(params)...));
     auto task_result = task->get_future();
-    auto task_wrapper = [task] () {
-      (*task)();
-    };
+    auto task_wrapper = [task]() { (*task)(); };
 
     auto task_id = task_id_++;
     bool is_submitted = false;
@@ -100,7 +96,7 @@ class ThreadPool {
 
   struct TaskQueue {
    public:
-    template<typename F>
+    template <typename F>
     void Push(F&& f) {
       {
         std::unique_lock<std::mutex> lock(mutex);
@@ -122,7 +118,7 @@ class ThreadPool {
       return true;
     }
 
-    template<typename F>
+    template <typename F>
     bool TryPush(F&& f) {
       {
         std::unique_lock<std::mutex> lock(mutex, std::try_to_lock);

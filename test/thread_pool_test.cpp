@@ -9,7 +9,7 @@ namespace test {
 
 TEST(ThreadPoolThreadPoolTest, Submit) {
   std::function<std::size_t(std::size_t)> fibonacci =
-      [&fibonacci] (std::size_t i) -> std::size_t {
+      [&fibonacci](std::size_t i) -> std::size_t {
     if (i == 1 || i == 2) {
       return 1;
     }
@@ -31,7 +31,7 @@ TEST(ThreadPoolThreadPoolTest, ThreadIds) {
   ThreadPool tp{};
   EXPECT_EQ(tp.num_threads(), tp.thread_map().size());
 
-  auto thread_id = [&] () -> std::size_t {
+  auto thread_id = [&]() -> std::size_t {
     return tp.thread_map().count(std::this_thread::get_id());
   };
 
